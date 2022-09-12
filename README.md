@@ -1,4 +1,9 @@
-
+# Web Forum
+  
+- User-defined threads with Youtube, Pinterest, & Twitter embedding
+- Bootstrap/CSS stylings
+  
+## Screenshots
 ![Alt Text](https://imgur.com/OlUsl6g.png)
 
 ![Alt Text](https://imgur.com/FbUYbAB.png)
