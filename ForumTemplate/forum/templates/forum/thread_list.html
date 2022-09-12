@@ -1,0 +1,166 @@
+{% extends "forum/base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+	<div class="mb-2" align="center">
+		
+		<!-- Load Scripts -->
+		<script type="text/javascript" src="/static/utilityScripts.js"></script>
+		
+		<!-- Shortform Message Display -->
+		{% if messages %}
+			<div align="center">
+				{% for message in messages %}
+					<div class="alert alert-{{ message.tags }} col-md-6">
+						<div class="row ml-1">
+							{{ message }}
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+		{% endif %}
+		
+		<!-- Top Section -->
+		<div>
+			<div style="float: left;">
+				<h2>{{ subforumData.title }}</h2>
+			</div>
+			<div class="mb-2" align="right">
+				{% if subforumData.titleURL != "locked-threads" %}
+					<a class="btn btn-light" href="{% url 'thread-create' subforumData.titleURL %}">New Thread</a>
+				{% endif %}
+			</div>
+		</div>
+		
+		<!-- Thread List -->
+		<div class="list-group col-md-12 mb-2" style="padding-right: 0px;">
+			{% for threadData in threadDataList %}
+				<a class="list-group-item list-group-item-action" href="{% url 'post-list' threadData.subforum.titleURL threadData.id %}">
+					<div class="d-flex flex-row">
+					
+						<!-- Left Side -->
+						<div style="d-flex d-column" align="left">
+							{% if threadData.isLocked %}
+								<h5 class="forum-title">{{ threadData.title }} (Locked)</h5>
+							{% else %}
+								<h5 class="forum-title">{{ threadData.title }}</h5>
+							{% endif %}
+							
+							<div>
+								{% if threadData.author == None %}
+									<small>Author: Anonymous</small>
+								{% else %}
+									<small>
+										<object>
+											Author: 
+											<a href="{% url 'public-profile' threadData.author.username %}" style="color: #212529;">
+												{{ threadData.author.username }}
+											</a>
+										</object>
+									</small>
+								{% endif %}
+							</div>
+							
+							{% if threadData.replyCount|divide:"5"|add:"1" > 1 %}
+								<div>
+									<small>
+										( Pages:
+										{% for i in threadData.replyCount|divide:"5"|add:"1"|makePageNumList %}
+											{% if i == '.' %}
+												...
+											{% else %}
+												<object>
+													<a href="{% url 'post-list' threadData.subforum.titleURL threadData.id %}?page={{i|add:"1"}}" style="color: #212529;">{{ i|add:"1" }}</a>
+												</object>
+											{% endif %}
+										{% endfor %}
+										 )
+									</small>
+								</div>
+							{% endif %}
+							
+							<div>
+								{% if threadData.replyCount > 0 %}
+									<small>
+										Last Reply: {{ threadData.lastDatePosted|dateString:'Live Date' }}
+										at {{ threadData.lastDatePosted|dateString:'Time' }},
+										{% if threadData.post_set.all|getLastAuthor == None %}
+											by Anonymous
+										{% else %}
+											by
+											<object>
+												<a href="{% url 'public-profile' threadData.post_set.all|getLastAuthor %}" style="color: #212529;">
+													{{ threadData.post_set.all|getLastAuthor }}
+												</a>
+											</object>
+										{% endif %}
+									</small>
+								{% else %}
+									<small>Last Reply: None</small>
+								{% endif %}
+							</div>
+						</div>
+						
+						<!-- Right Side -->
+						<div class="d-flex d-column ml-auto align-self-end" style="display: flex; flex-direction: column;" align="right">
+							<small style="white-space: nowrap;">
+								Views: {{ threadData.viewCount }}<br>
+								Replies: {{ threadData.replyCount }}
+							</small>
+							<div>
+								{% if request.user.is_authenticated and request.user.is_superuser or request.user.profile.userLevel == 2 %}
+									{% if request.user.profile.userLevel == 3 and subforumData.title == "Locked Threads" %}
+										<input type="hidden" id="URL_{{ forloop.counter }}" data-url="http://{{ request.get_host }}{% url 'thread-delete' threadData.subforum.titleURL threadData.id %}"/>
+										<object><a class="btn btn-danger mt-1 ml-1"  href="#/" onclick="openDialog('thread', {{ forloop.counter }})">Delete</a></object>
+									{% endif %}
+									<object><a class="btn btn-dark mt-1"  href="{% url 'thread-edit' threadData.subforum.titleURL threadData.id %}">Edit</a></object>
+								{% endif %}
+							</div>
+						</div>
+						
+					</div>
+				</a>
+			{% endfor %}
+		</div>
+		
+		<!-- Pagination -->
+		{% if threadDataList.has_other_pages %}
+			<ul class="pagination justify-content-center">
+				{% if threadDataList.has_previous %}
+					<li class="page-item"><a class="page-link pagination-link" href="?page={{ threadDataList.previous_page_number }}">«</a></li>
+				{% else %}
+					<li class="page-item disabled"><span class="page-link ">«</span></li>
+				{% endif %}
+				
+				{% if threadDataList.number|add:'-2' > 1 %}
+					<li class="page-item"><a class="page-link pagination-link" href="?page=1">1</a></li>
+					{% if threadDataList.number|add:'-3' > 1 %}
+						<li class="page-item disabled"><span class="page-link">..</span></li>
+					{% endif %}
+				{% endif %}
+				
+				{% for i in threadDataList.paginator.page_range %}
+					{% if threadDataList.number == i %}
+						<li class="page-item disabled"><span class="page-link" style="background-color:#cbd5db;">{{ i }}</span></li>
+					{% elif i > threadDataList.number|add:'-3' and i < threadDataList.number|add:'3' %}
+						<li class="page-item"><a class="page-link pagination-link" href="?page={{ i }}">{{ i }}</a></li>
+					{% endif %}
+				{% endfor %}
+				
+				{% if threadDataList.paginator.num_pages > threadDataList.number|add:'2' %}
+					{% if threadDataList.paginator.num_pages > threadDataList.number|add:'3' %}
+						<li class="page-item disabled"><span class="page-link">..</span></li>
+					{% endif %}
+					<li class="page-item"><a class="page-link pagination-link" href="?page={{ threadDataList.paginator.num_pages }}">{{ threadDataList.paginator.num_pages }}</a></li>
+				{% endif %}
+				
+				{% if threadDataList.has_next %}
+					<li class="page-item"><a class="page-link pagination-link" href="?page={{ threadDataList.next_page_number }}">»</a></li>
+				{% else %}
+					<li class="page-item disabled"><span class="page-link">»</span></li>
+				{% endif %}
+			</ul>
+		{% endif %}
+			
+	</div>
+{% endblock content %}

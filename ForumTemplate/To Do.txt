@@ -1,0 +1,14 @@
+
+To-Do List:
+-----------
+x. quoted tags not sizing correctly (vimeo, multiples of each, try mixing)
+-> http://127.0.0.1:8000/general-discussions/thread-39/
+-> http://127.0.0.1:8000/general-discussions/thread-24/?page=1
+
+x. user messages
+x. display previous usernames in public profile
+x. limit number of times users can change username
+x. scroll to correct post from "last replies" links on public profile pages
+x. mod/admin desgnation icons on public profile and post-list pages
+x. createPostView panel for easily applying text tags
+x. test every function, view, and prevention check as user, mod, and admin

@@ -1,0 +1,251 @@
+{% extends "forum/base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+	<div align="center">
+		<div class="mb-2">
+		
+			<!-- Scroll To Post Check -->
+			{% if scrollToPost != None %}
+				<script type="text/javascript">
+					$(document).ready(
+						function() {
+							var objDiv = document.getElementById('post_num_'.concat({{scrollToPost}}));
+							objDiv.scrollIntoView({behavior: 'smooth'})
+						}
+					);
+				</script>
+			{% endif %}
+			
+			<!-- Load Scripts -->
+			<script type="text/javascript" src="/static/utilityScripts.js"></script>
+			<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+		
+			<!-- Shortform Message Display -->
+			{% if messages %}
+				<div align="center">
+					{% for message in messages %}
+						<div class="alert alert-{{ message.tags }} col-md-6">
+							<div class="row ml-1">
+								{{ message }}
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+
+			<!-- Top Section (Go Back/Reply) -->
+			<div>
+				<div style="float: left;">
+					{% if threadData.isLocked %}
+						<h2>{{ threadData.title }} (Locked)</h2>
+					{% else %}
+						<h2>{{ threadData.title }}</h2>
+					{% endif %}
+				</div>
+				<div align="right">
+					<a class="btn btn-light mb-2" href="http://{{ request.session.previousSubforumURL }}">Back To {{ threadData.subforum.title }}</a>
+					{% if threadData.isLocked == False %}
+						<a class="btn btn-light mb-2" href="{% url 'post-create' threadData.subforum.titleURL threadData.id %}">Reply</a>
+					{% endif %}
+				</div>
+			</div>
+			
+			<!-- Post Content -->
+			<div align="center">
+				<div class="list-group col-md-12" align="left" style="padding-right: 0px;">
+					{% for post in postDataList %}
+						<div class="list-group-item mb-2" style="word-spacing: 0;">
+							<div class="d-flex flex-row">
+								<!-- Left Side: Author Content -->
+								<div class="d-flex flex-column col-3 border-right p-2">
+									{% if post.author == None %}
+										Anonymous
+									{% else %}
+										<a class="link-main" href="{% url 'public-profile' post.author.username %}">
+											{{ post.author.username }}
+										</a>
+									{% endif %}
+									{% if post.author != None %}
+										<img class="post-profile-image" src="{{ post.author.profile.image.url }}"></img>
+									{% endif %}
+									<small>
+										{{ post.date_posted|dateString:'Live Date' }} at
+										{{ post.date_posted|dateString:'Time' }}<br>
+									</small>
+									{% if post.author != None %}
+										<small>Post Count: {{ post.author.profile.getPostCount }}</small>
+									{% endif %}
+								</div>
+							
+								<!-- Right Side: Post Content -->
+								<div class="flex-column col-9 p-2">
+									{% for line in post.content|splitContent %}
+										{% for word in line|splitLine %}
+											
+											<!-- Mixed Tags -->
+											{% if '[b]' in word %}<b>{% endif %}
+											{% if '[u]' in word %}<u>{% endif %}
+											{% if '[i]' in word %}<i>{% endif %}
+											
+											<!-- Quotes -->
+											{% if '[quote=' in word and ']' in word and '[/quote]' in post.content %}
+												{% if word|containsAttribute:'quote' != '#' %}
+													<em class="post-quote">
+														<small>
+															{% if word|containsAttribute:'date' != '#' %}
+																{{ word|containsAttribute:'date'|quoteDateFilter }},
+																<a class="link-main" href="{% url 'public-profile' word|containsAttribute:'quote' %}">{{ word|containsAttribute:'quote' }}</a> said:
+															{% else %}
+																<a class="link-main" href="{% url 'public-profile' word|containsAttribute:'quote' %}">{{ word|containsAttribute:'quote' }}</a> said:
+															{% endif %}
+														</small>
+														<br>
+												{% endif %}
+											{% endif %}
+											
+											<!-- Colorized Text -->
+											{% if '[color=' in word and ']' in word and '[/color]' in post.content %}
+												<em style="color: {{ word|containsAttribute:'color' }};">
+											{% endif %}
+											
+											<!-- Sized Text -->
+											{% if '[size=' in word and ']' in word and '[/size]' in post.content %}
+												<em style="font-size: {{ word|containsAttribute:'size' }};">
+											{% endif %}
+											
+											<!-- Non-Mixed Tags -->
+											<!-- Links -->
+											{% if '[link=' in word and '[/link]' in word %}
+												<a target="_blank" href="{{ word|containsAttribute:'link' }}">{{ word|containsContent }}</a>
+											
+											<!-- Images -->
+											{% elif '[image=' in word and ']' in word %}
+												{% if word|containsAttribute:'link' != '#' %}
+													<a target="_blank" href="{{ word|containsAttribute:'link' }}">
+												{% endif %}
+												<img class="post-image" src="{{ word|containsAttribute:'image' }}" style="vertical-align: top;"></img>
+												{% if word|containsAttribute:'link' != '#' %}
+													</a>
+												{% endif %}
+												
+											<!-- Pinterest Images -->
+											{% elif '[pinterest=' in word and ']' in word %}
+												{% if word|containsAttribute:'pinterest' != '#' %}
+													<iframe src="{{ word|containsAttribute:'pinterest' }}" height="741" width="345" frameborder="0" scrolling="no" style="max-width: 100%; max-height: 100%;"></iframe>
+												{% endif %}
+												
+											<!-- Youtube Videos -->
+											{% elif '[youtube=' in word and ']' in word %}
+												{% if word|containsAttribute:'youtube' != '#' %}
+													<div class="embed-responsive embed-responsive-16by9" style="display: inline-block;">
+														<iframe src="{{ word|containsAttribute:'youtube' }}" width="420" height="315"></iframe>
+													</div>
+												{% endif %}
+												
+											<!-- Vimeo Videos -->
+											{% elif '[vimeo=' in word and ']' in word %}
+												{% if word|containsAttribute:'vimeo' != '#' %}
+													<div class="embed-responsive embed-responsive-16by9" style="display: inline-block;">
+														<iframe src="{{ word|containsAttribute:'vimeo' }}" width="680" height="370" frameborder="0" allow="fullscreen" allowfullscreen></iframe>
+													</div>
+												{% endif %}
+												
+											<!-- Twitter Posts -->
+											{% elif '[twitter=' in word and ']' in word %}
+												{% if word|containsAttribute:'twitter' != '#' %}
+													<div style="display: inline-block; width: 100%">
+														<blockquote class="twitter-tweet">
+															<a href="{{ word|containsAttribute:'twitter' }}"></a>
+														</blockquote>
+													</div>
+												{% endif %}
+							
+											{% else %}
+												<span style="float: left;">
+													{{ word|containsContent }}{{ ' ' }}
+												</span>
+											{% endif %}
+											
+											</b></u></i>
+											{% if '[/quote]' in word %}</em>{% endif %}
+											{% if '[/color]' in word %}</em>{% endif %}
+											{% if '[/size]' in word %}</em>{% endif %}
+											
+										{% endfor %}
+										<br>
+									{% endfor %}
+								</div>
+							</div>
+							
+							<!-- Bottom Of Post (Edit/Delete/Quote) -->
+							<div id="post_num_{{ forloop.counter }}" class="border-top mt-2" align="right">
+								{% if request.user.is_authenticated and post.author == request.user or request.user.is_superuser or request.user.profile.userLevel > 1 %}
+									<a class="btn btn-dark mt-2" style="float: left;" href="{% url 'post-edit' threadData.subforum.titleURL threadData.id post.id %}">Edit Post</a>
+								{% endif %}
+								{% if request.user.is_authenticated and request.user.profile.userLevel > 1 %}
+									{% if postDataList.paginator.num_pages > 1 or postDataList|length > 1 %}
+										<input type="hidden" id="URL_{{ forloop.counter|toString }}" data-url="http://{{ request.get_host }}{% url 'post-delete' threadData.subforum.titleURL threadData.id post.id %}"/>
+										<a class="btn btn-danger mt-2 ml-1" style="float: left;" href="#/" onclick="openDialog('post', {{ forloop.counter|toString }})">Delete</a>
+									{% endif %}
+								{% endif %}
+								<a class="btn btn-dark mt-2" href="{% url 'post-create-reply' threadData.subforum.titleURL threadData.id post.id %}">Quote</a>
+							</div>
+							
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+			
+			<!-- Bottom Buttons (Go To Top/Reply) -->
+			<div>
+				<div align="right">
+					<a class="btn btn-light" href="#/" onclick="goToTop()">Go To Top</a>
+					{% if threadData.isLocked == False %}
+						<a class="btn btn-light" href="{% url 'post-create' threadData.subforum.titleURL threadData.id %}">Reply</a>
+					{% endif %}
+				</div>
+			</div>
+			
+			<!-- Pagination -->
+			{% if postDataList.has_other_pages %}
+				<ul class="pagination justify-content-center">
+					{% if postDataList.has_previous %}
+						<li class="page-item"><a class="page-link pagination-link" href="?page={{ postDataList.previous_page_number }}">«</a></li>
+					{% else %}
+						<li class="page-item disabled"><span class="page-link">«</span></li>
+					{% endif %}
+					
+					{% if postDataList.number|add:'-2' > 1 %}
+						<li class="page-item"><a class="page-link pagination-link" href="?page=1">1</a></li>
+						{% if postDataList.number|add:'-3' > 1 %}
+							<li class="page-item disabled"><span class="page-link">..</span></li>
+						{% endif %}
+					{% endif %}
+					
+					{% for i in postDataList.paginator.page_range %}
+						{% if postDataList.number == i %}
+							<li class="page-item disabled"><span class="page-link" style="background-color:#cbd5db;">{{ i }}</span></li>
+						{% elif i > postDataList.number|add:'-3' and i < postDataList.number|add:'3' %}
+							<li class="page-item"><a class="page-link pagination-link" href="?page={{ i }}">{{ i }}</a></li>
+						{% endif %}
+					{% endfor %}
+					
+					{% if postDataList.paginator.num_pages > postDataList.number|add:'2' %}
+						{% if postDataList.paginator.num_pages > postDataList.number|add:'3' %}
+							<li class="page-item disabled"><span class="page-link">..</span></li>
+						{% endif %}
+						<li class="page-item"><a class="page-link pagination-link" href="?page={{ postDataList.paginator.num_pages }}">{{ postDataList.paginator.num_pages }}</a></li>
+					{% endif %}
+					
+					{% if postDataList.has_next %}
+						<li class="page-item"><a class="page-link pagination-link" href="?page={{ postDataList.next_page_number }}">»</a></li>
+					{% else %}
+						<li class="page-item disabled"><span class="page-link">»</span></li>
+					{% endif %}
+				</ul>
+			{% endif %}
+			
+		</div>
+	</div>
+{% endblock content %}

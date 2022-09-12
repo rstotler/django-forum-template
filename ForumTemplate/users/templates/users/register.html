@@ -1,0 +1,79 @@
+{% extends "forum/base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+	<div align="center">
+		<div class="content-section col-md-6">
+		
+			<!-- Javascript: Focus On Username Field -->
+			<script type="text/javascript">
+			  $(document).ready(
+				function(){
+				  var textArea = document.getElementById('id_username');
+				  textArea.focus();
+				}
+			  );
+			</script>
+		
+			<!-- Form -->
+			<form method="POST">
+				{% csrf_token %}
+				
+				<legend class="border-bottom mb-4" align="center">Sign Up</legend>
+				{% for field in form %}
+					<div class="mb-2">
+						{{ field|add_class:'form-control' }}
+					</div>
+					
+					<!-- Longform Error Display -->
+					{% if field.errors %}
+						<div class="alert alert-warning">
+							{% if field.errors|length == 1 %}
+								<ul>
+									<li>{{ field.errors.0 }}</li>
+								</ul>
+							{% else %}
+								<ul>
+									{% for error in field.errors %}
+										<li>{{ error }}</li>
+									{% endfor %}
+								<ul>
+							{% endif %}
+						</div>
+					{% endif %}
+				{% endfor %}
+				
+				<!-- Longform Message Display -->
+				{% if messages %}
+					{% if messages|length == 1 %}
+						{% for message in messages %}
+							<div class="alert alert-{{ message.tags }}">
+								<div class="row ml-1">
+									<ul>
+										<li>{{ message }}</li>
+									</ul>
+								</div>
+							</div>
+						{% endfor %}
+					{% else %}
+						{% for message in messages %}
+							<div class="alert alert-{{ message.tags }}">
+								<div class="row ml-1">
+									<ul>
+										<li>{{ message }}</li>
+									</ul>
+								</div>
+							</div>
+						{% endfor %}
+					{% endif %}
+				{% endif %}
+				
+				<button class="btn btn-dark btn-block" type="submit">Submit</button>
+			</form>
+			
+			<div align="right">
+				<small class="text-muted">Already have an account?<a class="ml-2" href="{% url 'login' %}">Sign In</a></small>
+			</div>
+		</div>
+	</div>
+{% endblock content %}

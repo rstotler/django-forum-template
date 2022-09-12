@@ -1,0 +1,44 @@
+{% extends "forum/base.html" %}
+{% load custom_filters %}
+{% load widget_tweaks %}
+
+{% block content %}
+	<div align="center">
+		<div class="col-md-10">
+			<div class="content-section mb-2" align="left" style="margin-bottom: 0px;">
+				
+				<div class="media">
+					<img class="rounded-circle account-img" src="{{ userData.profile.image.url }}">
+					<div class="media-body" align="left">
+						<h2 class="account-heading">{{ userData.username }}</h2>
+						Member Since: {{ userData.date_joined.date }} ({{ userData.date_joined|daysSince }} Days)<br>
+						Post Count: {{ userData.profile.getPostCount }}
+					</div>
+				</div>
+				
+				<div>
+					<b>Latest Threads:</b><br>
+					{% for threadData in latestThreadList %}
+						<a href="{% url 'post-list' threadData.subforum.titleURL threadData.id %}" style="color: #212529;">
+							[{{ threadData.date_posted|dateString:'Date' }}] - {{ threadData.getTitle|trimString:'25' }}<br>
+						</a>
+					{% endfor %}
+					<br>
+					<b>Last Replies:</b><br>
+					{% for postData in lastReplyList %}
+						{% if postData.thread.isLocked == False %}
+							<a href="{% url 'post-list' postData.subforum.titleURL postData.thread.id %}" style="color: #212529;">
+								Thread: {{ postData.thread.getTitle|trimString:'12' }} - {{ postData.content|trimString:'25' }}<br>
+							</a>
+						{% endif %}
+					{% endfor %}
+				</div>	
+			</div>
+			
+			<div class="mb-2" align="right">
+				<a class="btn btn-light" href="http://{{ request.session.previousURL }}">Go Back</a>
+			</div>
+			
+		</div>
+	</div>
+{% endblock content %}

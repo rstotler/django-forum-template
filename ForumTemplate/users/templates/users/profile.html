@@ -1,0 +1,77 @@
+{% extends "forum/base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+	<div align="center">
+		<div class="content-section col-md-6">
+			
+			<!-- Header -->
+			<div class="media">
+				<img class="rounded-circle account-img" src="{{ user.profile.image.url }}">
+				<div class="media-body" align="left">
+					<h2 class="account-heading">{{ user.username }}</h2>
+					<p class="text-secondary">{{ user.email }}</p>
+				</div>
+			</div>
+			
+			<!-- Form -->
+			<form method="POST" enctype="multipart/form-data">
+				{% csrf_token %}
+				
+				<legend class="border-bottom mb-4" align="center">Update Profile</legend>
+				{% for field in form %}
+					<div class="mb-2">
+						{{ field|add_class:'form-control' }}
+					</div>
+					
+					<!-- Longform Error Display -->
+					{% if field.errors %}
+						<div class="alert alert-warning">
+							{% if field.errors|length == 1 %}
+								<ul>
+									<li>{{ field.errors.0 }}</li>
+								</ul>
+							{% else %}
+								<ul>
+									{% for error in field.errors %}
+										<li>{{ error }}</li>
+									{% endfor %}
+								<ul>
+							{% endif %}
+						</div>
+					{% endif %}
+				{% endfor %}
+				
+				<!-- Longform Message Display -->
+				{% if messages %}
+					{% if messages|length == 1 %}
+						{% for message in messages %}
+							<div class="alert alert-{{ message.tags }}">
+								<div class="row ml-1">
+									<ul>
+										<li>{{ message }}</li>
+									</ul>
+								</div>
+							</div>
+						{% endfor %}
+					{% else %}
+						{% for message in messages %}
+							<div class="alert alert-{{ message.tags }}">
+								<div class="row ml-1">
+									<ul>
+										<li>{{ message }}</li>
+									</ul>
+								</div>
+							</div>
+						{% endfor %}
+					{% endif %}
+				{% endif %}
+				
+				<div align="right">
+					<button class="btn btn-dark" type="submit">Update</button>
+				</div>
+			</form>
+			
+		</div>
+	</div>
+{% endblock content %}

@@ -1,0 +1,47 @@
+{% extends "forum/base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+	<div align="center">
+		<div class="list-group col-md-12 mb-2" align="left" style="padding-right: 0px;">
+
+			<!-- Shortform Message Display -->
+			{% if messages %}
+				<div align="center">
+					{% for message in messages %}
+						<div class="alert alert-{{ message.tags }} col-md-6">
+							<div class="row ml-1">
+								{{ message }}
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+
+			<!-- Main Section -->
+			{% for targetSubforumTitle in subforumTitleList %}
+				{% if targetSubforumTitle == "locked-threads" and not request.user.is_authenticated %}
+				{% elif targetSubforumTitle == "locked-threads" and request.user.profile.userLevel == 1 %}
+				{% else %}
+					
+					<a class="list-group-item list-group-item-action" href="{% url 'thread-list' targetSubforumTitle %}">
+						<div class="d-flex flex-row">
+							<div class="d-flex flex-column justify-content-center">
+								<img src="{{ targetSubforumTitle|getSubforum:'imageURL' }}"/>
+							</div>
+							<div class="p-2 d-flex flex-column">
+								<h5 class="forum-title">{{ targetSubforumTitle|getSubforum:'title' }}</h5>
+								<small>{{ targetSubforumTitle|getSubforum:'description' }}</small>
+							</div>
+							<div class="d-flex flex-column ml-auto align-self-end">
+								<small style="white-space: nowrap;">Threads: {{ targetSubforumTitle|getSubforum:'threadCount' }}</small>
+							</div>
+						</div>
+					</a>
+					
+				{% endif %}
+			{% endfor %}
+			
+		</div>
+	</div>
+{% endblock content %}
